@@ -1,0 +1,93 @@
+config:
+  target: "https://your-app.vercel.app"
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm-up"
+    # Ramp-up phase
+    - duration: 120
+      arrivalRate: 2
+      rampTo: 10
+      name: "Ramp-up"
+    # Sustained load phase
+    - duration: 300
+      arrivalRate: 10
+      name: "Sustained load"
+    # Spike test
+    - duration: 60
+      arrivalRate: 50
+      name: "Spike test"
+    # Cool-down phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Cool-down"
+  processor: "./processor.js"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  # Dashboard load test
+  - name: "Dashboard Access"
+    weight: 30
+    flow:
+      - get:
+          url: "/dashboard"
+          capture:
+            - json: "$.user.id"
+              as: "userId"
+      - think: 2
+      - get:
+          url: "/api/contracts"
+      - think: 1
+
+  # Customer portal load test
+  - name: "Customer Portal"
+    weight: 25
+    flow:
+      - get:
+          url: "/portal/customer"
+      - think: 2
+      - get:
+          url: "/api/installments"
+      - think: 1
+
+  # Payment processing load test
+  - name: "Payment Processing"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/payment/jazzcash"
+          json:
+            contractId: "{{ $randomString() }}"
+            amount: "{{ $randomNumber(1000, 50000) }}"
+          capture:
+            - json: "$.transactionId"
+              as: "txnId"
+      - think: 1
+
+  # Contract creation load test
+  - name: "Contract Creation"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/contracts"
+          json:
+            customerId: "{{ $randomString() }}"
+            productId: "{{ $randomString() }}"
+            amount: "{{ $randomNumber(10000, 100000) }}"
+            installments: "{{ $randomNumber(3, 12) }}"
+      - think: 2
+
+  # Read operations load test
+  - name: "Read Operations"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/customers"
+      - think: 1
+      - get:
+          url: "/api/payments"
+      - think: 1
+
