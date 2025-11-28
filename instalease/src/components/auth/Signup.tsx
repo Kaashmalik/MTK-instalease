@@ -26,7 +26,7 @@ import { Footer } from '@/components/ui/footer';
  * @returns {JSX.Element} Signup form UI
  */
 export default function Signup() {
-  const router = useRouter();
+  useRouter(); // Initialize router for Next.js navigation context
   const { setUser, setSession, refreshProfile } = useAuthStore();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');

@@ -238,9 +238,8 @@ export default function DashboardPage() {
   const isSuperAdmin = profile?.role === 'super_admin';
   const isAdmin = profile?.role === 'admin' || isSuperAdmin;
   const isShopOwner = profile?.role === 'shop_owner' || isAdmin;
-  const isCreditManager = profile?.role === 'credit_manager' || isShopOwner;
   const isSalesRep = profile?.role === 'sales_rep';
-  const isCustomer = profile?.role === 'customer';
+  // Note: isCreditManager and isCustomer available for future role-based features
   
   // Check if user needs shop assignment (not super_admin and no shop_id)
   const needsShopAssignment = !isSuperAdmin && !profile?.shop_id;
@@ -473,8 +472,8 @@ export default function DashboardPage() {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, percent }: { name: string; percent?: number }) =>
-                              `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                            label={({ name, percent }) =>
+                              `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
                             }
                             outerRadius={80}
                             fill="#8884d8"
