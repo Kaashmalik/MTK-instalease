@@ -50,9 +50,9 @@ export default function SuperAdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-gradient-to-r from-purple-900 to-purple-800 text-white shadow-lg sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-purple-900 to-purple-800 dark:from-purple-950 dark:to-purple-900 text-white shadow-lg sticky top-0 z-50">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo & Desktop Nav */}

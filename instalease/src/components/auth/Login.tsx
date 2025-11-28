@@ -178,8 +178,9 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Welcome to InstalEase</CardTitle>
           <CardDescription>
@@ -314,6 +315,7 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
+      </div>
       
       <Footer variant="auth" />
     </div>

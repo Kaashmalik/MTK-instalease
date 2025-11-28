@@ -24,13 +24,13 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
   if (variant === 'minimal') {
     return (
       <footer className={`py-4 text-center ${className}`}>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           © 2026{' '}
           <Link 
             href="https://mtkcodex.site" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="font-medium hover:text-purple-600 transition-colors"
+            className="font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
           >
             MTK Codex
           </Link>
@@ -45,18 +45,18 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
     return (
       <footer className={`py-6 text-center ${className}`}>
         <div className="space-y-2">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Powered by{' '}
             <Link 
               href="https://mtkcodex.site" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+              className="font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
             >
               MALIK TECH
             </Link>
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             © 2026 MTK Codex. All rights reserved.
           </p>
         </div>
@@ -67,7 +67,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
   // Dashboard - For main app pages
   if (variant === 'dashboard') {
     return (
-      <footer className={`bg-white border-t border-gray-200 mt-auto ${className}`}>
+      <footer className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto ${className}`}>
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* Brand */}
@@ -80,40 +80,40 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
                   InstalEase
                 </span>
               </div>
-              <span className="text-gray-300 hidden sm:inline">|</span>
-              <span className="text-xs text-gray-500 hidden sm:inline">v2.0</span>
+              <span className="text-gray-300 dark:text-gray-600 hidden sm:inline">|</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">v2.0</span>
             </div>
 
             {/* Links */}
             <div className="flex items-center gap-4">
               <Link 
                 href="/support"
-                className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
                 Support
               </Link>
               <Link 
                 href="/privacy"
-                className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
                 Privacy
               </Link>
               <Link 
                 href="/terms"
-                className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
                 Terms
               </Link>
             </div>
 
             {/* Copyright */}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               © 2026{' '}
               <Link 
                 href="https://mtkcodex.site" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="font-medium hover:text-purple-600 transition-colors"
+                className="font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
                 MTK Codex
               </Link>
@@ -128,22 +128,22 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
   // Admin - For admin panels
   if (variant === 'admin') {
     return (
-      <footer className={`bg-gray-100 border-t border-gray-200 ${className}`}>
+      <footer className={`bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 ${className}`}>
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>🔐</span>
               <span>Admin Panel</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-gray-300 dark:text-gray-600">|</span>
               <span>InstalEase v2.0</span>
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               © 2026{' '}
               <Link 
                 href="https://mtkcodex.site" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="font-medium hover:text-purple-600 transition-colors"
+                className="font-medium hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
               >
                 MTK Codex
               </Link>

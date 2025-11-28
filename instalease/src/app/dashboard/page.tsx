@@ -250,17 +250,17 @@ export default function DashboardPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow sticky top-0 z-40">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <header className="bg-white dark:bg-gray-800 shadow sticky top-0 z-40">
           <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
             <div className="flex items-center justify-between gap-3">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">InstalEase</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">InstalEase</h1>
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="hidden sm:flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
                     {profile?.username?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className="text-sm text-gray-600 hidden md:block">
+                  <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
                     {profile?.username || user.email}
                   </span>
                 </div>
@@ -292,10 +292,10 @@ export default function DashboardPage() {
             </div>
           ) : isSuperAdmin ? (
             <div className="space-y-6">
-              <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+              <Card className="border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/20 dark:to-gray-800">
                 <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-purple-800 text-lg sm:text-xl">🔐 Super Admin Dashboard</CardTitle>
-                  <CardDescription className="text-sm">Full system access - Manage all shops and users</CardDescription>
+                  <CardTitle className="text-purple-800 dark:text-purple-300 text-lg sm:text-xl">🔐 Super Admin Dashboard</CardTitle>
+                  <CardDescription className="text-sm dark:text-gray-400">Full system access - Manage all shops and users</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -337,10 +337,10 @@ export default function DashboardPage() {
               
               <Card>
                 <CardHeader>
-                  <CardTitle>System Overview</CardTitle>
+                  <CardTitle className="dark:text-white">System Overview</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-300">
                     As Super Admin, you can approve shop applications, assign users to shops, and manage the entire system.
                   </p>
                 </CardContent>
