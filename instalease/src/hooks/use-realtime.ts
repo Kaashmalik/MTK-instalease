@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { queryKeys } from '@/lib/query-keys';
 
 /**
  * Subscribe to payments table changes
@@ -52,10 +53,9 @@ export function useRealtimePayments(
           console.log('Payment change received:', payload);
 
           // Invalidate payment queries to trigger refetch
-          queryClient.invalidateQueries({ queryKey: ['payments'] });
-          queryClient.invalidateQueries({ queryKey: ['customer-payments'] });
-          queryClient.invalidateQueries({ queryKey: ['installments'] });
-          queryClient.invalidateQueries({ queryKey: ['contracts'] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.payments.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.installments.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.contracts.all() });
         }
       )
       .subscribe();
@@ -102,8 +102,7 @@ export function useRealtimeContracts(
         },
         (payload) => {
           console.log('Contract change received:', payload);
-          queryClient.invalidateQueries({ queryKey: ['contracts'] });
-          queryClient.invalidateQueries({ queryKey: ['contract'] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.contracts.all() });
         }
       )
       .subscribe();
@@ -149,8 +148,7 @@ export function useRealtimeInstallments(
         },
         (payload) => {
           console.log('Installment change received:', payload);
-          queryClient.invalidateQueries({ queryKey: ['installments'] });
-          queryClient.invalidateQueries({ queryKey: ['customer-installments'] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.installments.all() });
         }
       )
       .subscribe();

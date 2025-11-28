@@ -10,6 +10,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
+import { queryKeys } from '@/lib/query-keys';
 
 /**
  * Installment type from database
@@ -50,7 +51,7 @@ export interface InstallmentWithDetails extends Installment {
  */
 export function useInstallments(contractId: string | null) {
   return useQuery({
-    queryKey: ['installments', contractId],
+    queryKey: queryKeys.installments.list(contractId!),
     queryFn: async () => {
       if (!contractId) return [];
 
@@ -78,7 +79,7 @@ export function useCustomerInstallments(customerId: string | null) {
   const { profile } = useAuthStore();
 
   return useQuery({
-    queryKey: ['customer-installments', customerId, profile?.shop_id],
+    queryKey: queryKeys.installments.customerList(customerId!, profile?.shop_id!),
     queryFn: async () => {
       if (!customerId || !profile?.shop_id) {
         return [];

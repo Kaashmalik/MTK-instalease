@@ -72,7 +72,27 @@ export default function DashboardPage() {
 
   // Fetch dashboard statistics
   useEffect(() => {
-    if (!profile?.shop_id) return;
+    // If no profile yet, wait for it to be loaded
+    if (!profile) {
+      setLoadingStats(false);
+      return;
+    }
+    
+    // If no shop_id, show empty stats but still render dashboard
+    if (!profile.shop_id) {
+      setStats({
+        totalOutstanding: 0,
+        totalReceived: 0,
+        activeContracts: 0,
+        pendingApplications: 0,
+        overdueCount: 0,
+        monthlyRevenue: [],
+        contractStatusDistribution: [],
+        paymentMethodDistribution: [],
+      });
+      setLoadingStats(false);
+      return;
+    }
 
     const fetchStats = async () => {
       setLoadingStats(true);
@@ -213,9 +233,16 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Role-based access: sales_rep sees limited view
+  // Role-based access
+  const isSuperAdmin = profile?.role === 'super_admin';
+  const isAdmin = profile?.role === 'admin' || isSuperAdmin;
+  const isShopOwner = profile?.role === 'shop_owner' || isAdmin;
+  const isCreditManager = profile?.role === 'credit_manager' || isShopOwner;
   const isSalesRep = profile?.role === 'sales_rep';
-  const isShopOwner = profile?.role === 'shop_owner' || profile?.role === 'admin';
+  const isCustomer = profile?.role === 'customer';
+  
+  // Check if user needs shop assignment (not super_admin and no shop_id)
+  const needsShopAssignment = !isSuperAdmin && !profile?.shop_id;
 
   // Chart colors
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -223,72 +250,179 @@ export default function DashboardPage() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-gray-900">InstalEase Dashboard</h1>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
-                  {profile?.username || user.email} ({profile?.role})
-                </span>
-                <Button variant="outline" onClick={() => signOut()}>
-                  Sign Out
+        <header className="bg-white shadow sticky top-0 z-40">
+          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+            <div className="flex items-center justify-between gap-3">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">InstalEase</h1>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <span className="text-sm text-gray-600 hidden md:block">
+                    {profile?.username || user.email}
+                  </span>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => signOut()} className="text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Sign Out</span>
+                  <span className="sm:hidden">🚪</span>
                 </Button>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
           {loadingStats || contractsLoading || paymentsLoading ? (
             <LoadingState message="Loading dashboard data..." />
+          ) : !profile ? (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Welcome to InstalEase!</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Your profile is being set up. Please wait a moment...
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : isSuperAdmin ? (
+            <div className="space-y-6">
+              <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-purple-800 text-lg sm:text-xl">🔐 Super Admin Dashboard</CardTitle>
+                  <CardDescription className="text-sm">Full system access - Manage all shops and users</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <Button 
+                      className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
+                      variant="outline"
+                      onClick={() => window.location.href = '/super-admin/applications'}
+                    >
+                      <span className="text-xl sm:text-2xl">📋</span>
+                      <span>Applications</span>
+                    </Button>
+                    <Button 
+                      className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
+                      variant="outline"
+                      onClick={() => window.location.href = '/super-admin/payments'}
+                    >
+                      <span className="text-xl sm:text-2xl">💳</span>
+                      <span>Payments</span>
+                    </Button>
+                    <Button 
+                      className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
+                      variant="outline"
+                      onClick={() => window.location.href = '/super-admin/shops'}
+                    >
+                      <span className="text-xl sm:text-2xl">🏪</span>
+                      <span>Shops</span>
+                    </Button>
+                    <Button 
+                      className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 text-xs sm:text-sm"
+                      variant="outline"
+                      onClick={() => window.location.href = '/super-admin/users'}
+                    >
+                      <span className="text-xl sm:text-2xl">👥</span>
+                      <span>Users</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    As Super Admin, you can approve shop applications, assign users to shops, and manage the entire system.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : needsShopAssignment ? (
+            <div className="space-y-6">
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardHeader>
+                  <CardTitle className="text-yellow-800">⏳ Awaiting Shop Assignment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Your account has been created successfully. To start using InstalEase, you need to be assigned to a shop.
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Options:</p>
+                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                      <li>Apply for a new shop (if you are a business owner)</li>
+                      <li>Contact your administrator to be added to an existing shop</li>
+                    </ul>
+                  </div>
+                  <Button 
+                    className="mt-4"
+                    onClick={() => window.location.href = '/apply-shop'}
+                  >
+                    Apply for Shop
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           ) : (
             <div className="space-y-6">
               {/* Key Metrics */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Outstanding</CardTitle>
-                    <CardDescription>Pending and overdue amounts</CardDescription>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                <Card className="bg-gradient-to-br from-red-50 to-white">
+                  <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                    <CardDescription className="text-xs sm:text-sm flex items-center gap-1">
+                      <span>💸</span> <span className="hidden sm:inline">Total </span>Outstanding
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-600">
-                      PKR {stats?.totalOutstanding.toLocaleString('en-PK', { minimumFractionDigits: 2 }) || '0.00'}
+                  <CardContent className="p-3 sm:p-4 pt-0">
+                    <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600">
+                      <span className="text-xs sm:text-sm font-normal">PKR </span>
+                      {stats?.totalOutstanding.toLocaleString('en-PK', { minimumFractionDigits: 0 }) || '0'}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Total Received</CardTitle>
-                    <CardDescription>All-time payments</CardDescription>
+                <Card className="bg-gradient-to-br from-green-50 to-white">
+                  <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                    <CardDescription className="text-xs sm:text-sm flex items-center gap-1">
+                      <span>✅</span> <span className="hidden sm:inline">Total </span>Received
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-green-600">
-                      PKR {stats?.totalReceived.toLocaleString('en-PK', { minimumFractionDigits: 2 }) || '0.00'}
+                  <CardContent className="p-3 sm:p-4 pt-0">
+                    <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600">
+                      <span className="text-xs sm:text-sm font-normal">PKR </span>
+                      {stats?.totalReceived.toLocaleString('en-PK', { minimumFractionDigits: 0 }) || '0'}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Contracts</CardTitle>
-                    <CardDescription>Currently active</CardDescription>
+                <Card className="bg-gradient-to-br from-blue-50 to-white">
+                  <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                    <CardDescription className="text-xs sm:text-sm flex items-center gap-1">
+                      <span>📝</span> Active Contracts
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
+                  <CardContent className="p-3 sm:p-4 pt-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-600">
                       {stats?.activeContracts || 0}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Overdue</CardTitle>
-                    <CardDescription>Past due installments</CardDescription>
+                <Card className="bg-gradient-to-br from-orange-50 to-white">
+                  <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+                    <CardDescription className="text-xs sm:text-sm flex items-center gap-1">
+                      <span>⚠️</span> Overdue
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-orange-600">
+                  <CardContent className="p-3 sm:p-4 pt-0">
+                    <div className="text-2xl sm:text-3xl font-bold text-orange-600">
                       {stats?.overdueCount || 0}
                     </div>
                   </CardContent>
@@ -297,15 +431,15 @@ export default function DashboardPage() {
 
               {/* Analytics Charts - Only for shop owners */}
               {isShopOwner && stats && (
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
                   {/* Monthly Revenue Chart */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Monthly Revenue</CardTitle>
-                      <CardDescription>Last 6 months</CardDescription>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-base sm:text-lg">Monthly Revenue</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Last 6 months</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
+                    <CardContent className="p-2 sm:p-6 pt-0">
+                      <ResponsiveContainer width="100%" height={250}>
                         <LineChart data={stats.monthlyRevenue}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="month" />
@@ -382,12 +516,12 @@ export default function DashboardPage() {
 
               {/* Quick Actions */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Common tasks</CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Common tasks</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <Button className="w-full" variant="outline" asChild>
                       <a href="/customers">Manage Customers</a>
                     </Button>

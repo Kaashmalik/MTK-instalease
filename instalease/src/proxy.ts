@@ -1,24 +1,29 @@
 /**
- * Next.js Middleware
+ * Next.js Proxy (formerly Middleware)
  * 
  * Handles route protection and authentication checks.
  * Redirects unauthenticated users to login page.
  * Supports role-based access control (RBAC).
  * 
- * @module middleware
+ * @module proxy
  */
 
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
  * Public routes that don't require authentication
  */
-const publicRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/verify-email'];
+const publicRoutes = ['/', '/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/verify-email'];
 
 /**
- * Admin-only routes
+ * Super admin routes (only super_admin can access)
+ */
+const superAdminRoutes = ['/super-admin'];
+
+/**
+ * Admin routes (admin and super_admin can access)
  */
 const adminRoutes = ['/admin'];
 
@@ -38,12 +43,12 @@ const customerRoutes = ['/portal/customer'];
 const staffRoutes = ['/applications/staff'];
 
 /**
- * Middleware function to handle authentication and authorization
+ * Proxy function to handle authentication and authorization
  * 
  * @param {NextRequest} request - The incoming request
  * @returns {NextResponse} Response with appropriate redirects or continuation
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -58,7 +63,7 @@ export async function middleware(request: NextRequest) {
         get(name: string) {
           return request.cookies.get(name)?.value;
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value,
@@ -75,7 +80,7 @@ export async function middleware(request: NextRequest) {
             ...options,
           });
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value: '',
@@ -116,30 +121,51 @@ export async function middleware(request: NextRequest) {
 
   // If session exists and trying to access auth pages, redirect to dashboard
   if (session && isPublicRoute && pathname !== '/auth/verify-email') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Only redirect auth pages, not the root
+    if (pathname.startsWith('/auth/')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    // Redirect root to dashboard for logged-in users
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   }
 
   // If session exists, check role-based access
   if (session) {
-    // Fetch user profile to check role
-    const { data: profile } = await supabase
+    // Fetch user profile to check role (profile may be missing for new users)
+    const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('role')
       .eq('user_id', session.user.id)
-      .single();
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error fetching user role in proxy:', {
+        message: profileError.message,
+        code: profileError.code,
+      });
+    }
 
     const userRole = profile?.role || 'customer';
 
-    // Check admin routes
-    if (adminRoutes.some((route) => pathname.startsWith(route))) {
-      if (userRole !== 'admin') {
+    // Check super admin routes (only super_admin)
+    if (superAdminRoutes.some((route) => pathname.startsWith(route))) {
+      if (userRole !== 'super_admin') {
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     }
 
-    // Check shop owner routes
+    // Check admin routes (admin and super_admin)
+    if (adminRoutes.some((route) => pathname.startsWith(route))) {
+      if (!['admin', 'super_admin'].includes(userRole)) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    }
+
+    // Check shop owner routes (shop_owner, admin, super_admin)
     if (shopOwnerRoutes.some((route) => pathname.startsWith(route))) {
-      if (!['admin', 'shop_owner'].includes(userRole)) {
+      if (!['shop_owner', 'admin', 'super_admin'].includes(userRole)) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     }
@@ -151,9 +177,9 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Check staff routes
+    // Check staff routes (sales_rep, credit_manager, shop_owner, admin, super_admin)
     if (staffRoutes.some((route) => pathname.startsWith(route))) {
-      if (!['sales_rep', 'credit_manager', 'shop_owner', 'admin'].includes(userRole)) {
+      if (!['sales_rep', 'credit_manager', 'shop_owner', 'admin', 'super_admin'].includes(userRole)) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     }

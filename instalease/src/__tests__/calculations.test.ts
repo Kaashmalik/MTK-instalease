@@ -6,15 +6,7 @@
  * @module __tests__/calculations.test
  */
 
-import {
-  calculateMonthlyInstallment,
-  calculateTotalAmount,
-  calculateTotalInterest,
-  calculateDebtToIncomeRatio,
-  calculateEarlySettlementDiscount,
-  calculateLateFee,
-  generateInstallmentSchedule,
-} from '@/lib/utils/calculations';
+import { FinancialCalculator } from '@/lib/utils/calculations';
 
 describe('Financial Calculations', () => {
   describe('calculateMonthlyInstallment', () => {
@@ -23,7 +15,7 @@ describe('Financial Calculations', () => {
       const annualInterestRate = 12; // 12%
       const months = 12;
 
-      const result = calculateMonthlyInstallment(principal, annualInterestRate, months);
+      const result = FinancialCalculator.calculateMonthlyInstallment(principal, annualInterestRate, months);
       expect(result).toBeGreaterThan(0);
       expect(result).toBeLessThan(principal / months * 1.2); // Should be reasonable
     });
@@ -33,12 +25,12 @@ describe('Financial Calculations', () => {
       const annualInterestRate = 0;
       const months = 12;
 
-      const result = calculateMonthlyInstallment(principal, annualInterestRate, months);
+      const result = FinancialCalculator.calculateMonthlyInstallment(principal, annualInterestRate, months);
       expect(result).toBe(principal / months);
     });
 
     it('should return 0 for zero principal', () => {
-      const result = calculateMonthlyInstallment(0, 12, 12);
+      const result = FinancialCalculator.calculateMonthlyInstallment(0, 12, 12);
       expect(result).toBe(0);
     });
   });
@@ -49,7 +41,7 @@ describe('Financial Calculations', () => {
       const monthlyInstallment = 10000;
       const months = 12;
 
-      const result = calculateTotalAmount(downPayment, monthlyInstallment, months);
+      const result = FinancialCalculator.calculateTotalAmount(downPayment, monthlyInstallment, months);
       expect(result).toBe(150000);
     });
   });
@@ -60,7 +52,7 @@ describe('Financial Calculations', () => {
       const downPayment = 30000;
       const totalAmount = 150000;
 
-      const result = calculateTotalInterest(productPrice, downPayment, totalAmount);
+      const result = FinancialCalculator.calculateTotalInterest(productPrice, downPayment, totalAmount);
       expect(result).toBe(30000); // 150000 - (150000 - 30000) - 30000
     });
   });
@@ -70,12 +62,12 @@ describe('Financial Calculations', () => {
       const monthlyInstallment = 10000;
       const monthlyIncome = 50000;
 
-      const result = calculateDebtToIncomeRatio(monthlyInstallment, monthlyIncome);
+      const result = FinancialCalculator.calculateDebtToIncomeRatio(monthlyInstallment, monthlyIncome);
       expect(result).toBe(20); // 20%
     });
 
     it('should return 0 for zero income', () => {
-      const result = calculateDebtToIncomeRatio(10000, 0);
+      const result = FinancialCalculator.calculateDebtToIncomeRatio(10000, 0);
       expect(result).toBe(0);
     });
   });
@@ -83,13 +75,13 @@ describe('Financial Calculations', () => {
   describe('calculateEarlySettlementDiscount', () => {
     it('should calculate early settlement discount with default 5%', () => {
       const remainingAmount = 100000;
-      const result = calculateEarlySettlementDiscount(remainingAmount);
+      const result = FinancialCalculator.calculateEarlySettlementDiscount(remainingAmount);
       expect(result).toBe(5000); // 5%
     });
 
     it('should calculate early settlement discount with custom percentage', () => {
       const remainingAmount = 100000;
-      const result = calculateEarlySettlementDiscount(remainingAmount, 10);
+      const result = FinancialCalculator.calculateEarlySettlementDiscount(remainingAmount, 10);
       expect(result).toBe(10000); // 10%
     });
   });
@@ -100,12 +92,12 @@ describe('Financial Calculations', () => {
       const daysOverdue = 5;
       const dailyLateFeeRate = 0.5; // 0.5% per day
 
-      const result = calculateLateFee(overdueAmount, daysOverdue, dailyLateFeeRate);
+      const result = FinancialCalculator.calculateLateFee(overdueAmount, daysOverdue, dailyLateFeeRate);
       expect(result).toBe(250); // 10000 * 0.5% * 5
     });
 
     it('should return 0 for no days overdue', () => {
-      const result = calculateLateFee(10000, 0);
+      const result = FinancialCalculator.calculateLateFee(10000, 0);
       expect(result).toBe(0);
     });
   });
@@ -118,7 +110,7 @@ describe('Financial Calculations', () => {
       const months = 12;
       const startDate = new Date('2024-01-01');
 
-      const schedule = generateInstallmentSchedule(
+      const schedule = FinancialCalculator.generateInstallmentSchedule(
         principal,
         monthlyInstallment,
         annualInterestRate,
@@ -133,7 +125,7 @@ describe('Financial Calculations', () => {
     });
 
     it('should have decreasing remaining balance', () => {
-      const schedule = generateInstallmentSchedule(100000, 10000, 12, 12);
+      const schedule = FinancialCalculator.generateInstallmentSchedule(100000, 10000, 12, 12);
       
       for (let i = 1; i < schedule.length; i++) {
         expect(schedule[i].remainingBalance).toBeLessThanOrEqual(

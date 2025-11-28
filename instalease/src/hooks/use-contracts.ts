@@ -9,6 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
+import { queryKeys } from '@/lib/query-keys';
 
 /**
  * Contract type from database
@@ -38,7 +39,7 @@ export function useContracts() {
   const { profile } = useAuthStore();
 
   return useQuery({
-    queryKey: ['contracts', profile?.shop_id],
+    queryKey: queryKeys.contracts.list(profile?.shop_id!),
     queryFn: async () => {
       if (!profile?.shop_id) {
         throw new Error('No shop ID available');
@@ -62,7 +63,7 @@ export function useContracts() {
  */
 export function useContract(contractId: string | null) {
   return useQuery({
-    queryKey: ['contract', contractId],
+    queryKey: queryKeys.contracts.detail(contractId!),
     queryFn: async () => {
       if (!contractId) return null;
 
@@ -116,7 +117,7 @@ export function useCreateContract() {
       return data as Contract;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts', profile?.shop_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.list(profile?.shop_id!) });
     },
   });
 }
@@ -157,8 +158,9 @@ export function useUpdateContractStatus() {
       if (error) throw error;
       return data as Contract;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts', profile?.shop_id] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.list(profile?.shop_id!) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.detail(data.contract_id) });
     },
   });
 }

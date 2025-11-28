@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
+import { queryKeys } from '@/lib/query-keys';
 
 /**
  * Customer type from database
@@ -36,7 +37,7 @@ export function useCustomers() {
   const { profile } = useAuthStore();
 
   return useQuery({
-    queryKey: ['customers', profile?.shop_id],
+    queryKey: queryKeys.customers.list(profile?.shop_id!),
     queryFn: async () => {
       if (!profile?.shop_id) {
         throw new Error('No shop ID available');
@@ -60,7 +61,7 @@ export function useCustomers() {
  */
 export function useCustomer(customerId: string | null) {
   return useQuery({
-    queryKey: ['customer', customerId],
+    queryKey: queryKeys.customers.detail(customerId!),
     queryFn: async () => {
       if (!customerId) return null;
 
@@ -83,6 +84,7 @@ export function useCustomer(customerId: string | null) {
 export function useCreateCustomer() {
   const queryClient = useQueryClient();
   const { profile } = useAuthStore();
+  const shopId = profile?.shop_id!;
 
   return useMutation({
     mutationFn: async (customerData: {
@@ -95,7 +97,7 @@ export function useCreateCustomer() {
       cnic_front_image_url?: string;
       cnic_back_image_url?: string;
     }) => {
-      if (!profile?.shop_id) {
+      if (!shopId) {
         throw new Error('No shop ID available');
       }
 
@@ -103,7 +105,7 @@ export function useCreateCustomer() {
         .from('customers')
         .insert({
           ...customerData,
-          shop_id: profile.shop_id,
+          shop_id: shopId,
         })
         .select()
         .single();
@@ -112,20 +114,15 @@ export function useCreateCustomer() {
       return data as Customer;
     },
     onMutate: async (newCustomer) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['customers', profile?.shop_id] });
+      const queryKey = queryKeys.customers.list(shopId);
+      await queryClient.cancelQueries({ queryKey });
 
-      // Snapshot previous value
-      const previousCustomers = queryClient.getQueryData<Customer[]>([
-        'customers',
-        profile?.shop_id,
-      ]);
+      const previousCustomers = queryClient.getQueryData<Customer[]>(queryKey);
 
-      // Optimistically update
-      if (previousCustomers && profile?.shop_id) {
+      if (previousCustomers) {
         const optimisticCustomer: Customer = {
           customer_id: crypto.randomUUID(),
-          shop_id: profile.shop_id,
+          shop_id: shopId,
           full_name: newCustomer.full_name,
           cnic_number: newCustomer.cnic_number,
           phone: newCustomer.phone,
@@ -138,25 +135,19 @@ export function useCreateCustomer() {
           updated_at: new Date().toISOString(),
         };
 
-        queryClient.setQueryData<Customer[]>(
-          ['customers', profile.shop_id],
-          [optimisticCustomer, ...previousCustomers]
-        );
+        queryClient.setQueryData<Customer[]>(queryKey, [optimisticCustomer, ...previousCustomers]);
       }
 
       return { previousCustomers };
     },
     onError: (err, newCustomer, context) => {
-      // Rollback on error
-      if (context?.previousCustomers && profile?.shop_id) {
-        queryClient.setQueryData(
-          ['customers', profile.shop_id],
-          context.previousCustomers
-        );
+      const queryKey = queryKeys.customers.list(shopId);
+      if (context?.previousCustomers) {
+        queryClient.setQueryData(queryKey, context.previousCustomers);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers', profile?.shop_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.lists() });
     },
   });
 }
@@ -167,6 +158,7 @@ export function useCreateCustomer() {
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
   const { profile } = useAuthStore();
+  const shopId = profile?.shop_id!;
 
   return useMutation({
     mutationFn: async ({
@@ -187,54 +179,43 @@ export function useUpdateCustomer() {
       return data as Customer;
     },
     onMutate: async ({ customerId, updates }) => {
-      await queryClient.cancelQueries({ queryKey: ['customers', profile?.shop_id] });
-      await queryClient.cancelQueries({ queryKey: ['customer', customerId] });
+      const listQueryKey = queryKeys.customers.list(shopId);
+      const detailQueryKey = queryKeys.customers.detail(customerId);
 
-      const previousCustomers = queryClient.getQueryData<Customer[]>([
-        'customers',
-        profile?.shop_id,
-      ]);
-      const previousCustomer = queryClient.getQueryData<Customer>([
-        'customer',
-        customerId,
-      ]);
+      await queryClient.cancelQueries({ queryKey: listQueryKey });
+      await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
-      if (previousCustomers && profile?.shop_id) {
+      const previousCustomers = queryClient.getQueryData<Customer[]>(listQueryKey);
+      const previousCustomer = queryClient.getQueryData<Customer>(detailQueryKey);
+
+      if (previousCustomers) {
         queryClient.setQueryData<Customer[]>(
-          ['customers', profile.shop_id],
-          previousCustomers.map((c) =>
-            c.customer_id === customerId ? { ...c, ...updates } : c
-          )
+          listQueryKey,
+          previousCustomers.map((c) => (c.customer_id === customerId ? { ...c, ...updates } : c))
         );
       }
 
       if (previousCustomer) {
-        queryClient.setQueryData<Customer>(['customer', customerId], {
-          ...previousCustomer,
-          ...updates,
-        });
+        queryClient.setQueryData<Customer>(detailQueryKey, { ...previousCustomer, ...updates });
       }
 
       return { previousCustomers, previousCustomer };
     },
     onError: (err, variables, context) => {
-      if (context?.previousCustomers && profile?.shop_id) {
-        queryClient.setQueryData(
-          ['customers', profile.shop_id],
-          context.previousCustomers
-        );
+      const listQueryKey = queryKeys.customers.list(shopId);
+      const detailQueryKey = queryKeys.customers.detail(variables.customerId);
+
+      if (context?.previousCustomers) {
+        queryClient.setQueryData(listQueryKey, context.previousCustomers);
       }
       if (context?.previousCustomer) {
-        queryClient.setQueryData(
-          ['customer', variables.customerId],
-          context.previousCustomer
-        );
+        queryClient.setQueryData(detailQueryKey, context.previousCustomer);
       }
     },
     onSettled: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['customers', profile?.shop_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.lists() });
       if (data) {
-        queryClient.invalidateQueries({ queryKey: ['customer', data.customer_id] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.customers.detail(data.customer_id) });
       }
     },
   });
@@ -246,27 +227,22 @@ export function useUpdateCustomer() {
 export function useDeleteCustomer() {
   const queryClient = useQueryClient();
   const { profile } = useAuthStore();
+  const shopId = profile?.shop_id!;
 
   return useMutation({
     mutationFn: async (customerId: string) => {
-      const { error } = await supabase
-        .from('customers')
-        .delete()
-        .eq('customer_id', customerId);
-
+      const { error } = await supabase.from('customers').delete().eq('customer_id', customerId);
       if (error) throw error;
     },
     onMutate: async (customerId) => {
-      await queryClient.cancelQueries({ queryKey: ['customers', profile?.shop_id] });
+      const queryKey = queryKeys.customers.list(shopId);
+      await queryClient.cancelQueries({ queryKey });
 
-      const previousCustomers = queryClient.getQueryData<Customer[]>([
-        'customers',
-        profile?.shop_id,
-      ]);
+      const previousCustomers = queryClient.getQueryData<Customer[]>(queryKey);
 
-      if (previousCustomers && profile?.shop_id) {
+      if (previousCustomers) {
         queryClient.setQueryData<Customer[]>(
-          ['customers', profile.shop_id],
+          queryKey,
           previousCustomers.filter((c) => c.customer_id !== customerId)
         );
       }
@@ -274,15 +250,13 @@ export function useDeleteCustomer() {
       return { previousCustomers };
     },
     onError: (err, customerId, context) => {
-      if (context?.previousCustomers && profile?.shop_id) {
-        queryClient.setQueryData(
-          ['customers', profile.shop_id],
-          context.previousCustomers
-        );
+      if (context?.previousCustomers) {
+        const queryKey = queryKeys.customers.list(shopId);
+        queryClient.setQueryData(queryKey, context.previousCustomers);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers', profile?.shop_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.lists() });
     },
   });
 }

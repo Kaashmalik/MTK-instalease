@@ -15,13 +15,7 @@ import { contractSchema, type ContractFormData } from '@/lib/validations/contrac
 import { useCreateContract } from '@/hooks/use-contracts';
 import { useCustomers } from '@/hooks/use-customers';
 import { useGuarantors } from '@/hooks/use-guarantors';
-import {
-  calculateMonthlyInstallment,
-  calculateTotalAmount,
-  calculateTotalInterest,
-  calculateDebtToIncomeRatio,
-  generateInstallmentSchedule,
-} from '@/lib/utils/calculations';
+import { FinancialCalculator } from '@/lib/utils/calculations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,13 +76,13 @@ export function ContractApplicationForm({ onSuccess }: ContractApplicationFormPr
   const calculatePreview = () => {
     if (productPrice > 0 && totalMonths > 0) {
       const principal = productPrice - (downPayment || 0);
-      const monthlyInstallment = calculateMonthlyInstallment(
+      const monthlyInstallment = FinancialCalculator.calculateMonthlyInstallment(
         principal,
         interestRate || 0,
         totalMonths
       );
-      const totalAmount = calculateTotalAmount(downPayment || 0, monthlyInstallment, totalMonths);
-      const totalInterest = calculateTotalInterest(productPrice, downPayment || 0, totalAmount);
+      const totalAmount = FinancialCalculator.calculateTotalAmount(downPayment || 0, monthlyInstallment, totalMonths);
+      const totalInterest = FinancialCalculator.calculateTotalInterest(productPrice, downPayment || 0, totalAmount);
 
       setCalculationPreview({
         principal,
@@ -144,7 +138,7 @@ export function ContractApplicationForm({ onSuccess }: ContractApplicationFormPr
 
   const selectedCustomer = customers?.find((c) => c.customer_id === selectedCustomerId);
   const debtToIncomeRatio = selectedCustomer?.monthly_income
-    ? calculateDebtToIncomeRatio(
+    ? FinancialCalculator.calculateDebtToIncomeRatio(
         calculationPreview?.monthlyInstallment || 0,
         selectedCustomer.monthly_income
       )

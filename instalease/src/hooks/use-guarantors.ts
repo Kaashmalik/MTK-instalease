@@ -9,6 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
+import { queryKeys } from '@/lib/query-keys';
 
 /**
  * Guarantor type from database
@@ -32,7 +33,7 @@ export interface Guarantor {
  */
 export function useGuarantors(customerId: string | null) {
   return useQuery({
-    queryKey: ['guarantors', customerId],
+    queryKey: queryKeys.guarantors.list(customerId!),
     queryFn: async () => {
       if (!customerId) return [];
 
@@ -82,7 +83,7 @@ export function useCreateGuarantor() {
       return data as Guarantor;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['guarantors', data.customer_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.guarantors.list(data.customer_id) });
     },
   });
 }
@@ -112,7 +113,7 @@ export function useUpdateGuarantor() {
       return data as Guarantor;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['guarantors', data.customer_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.guarantors.list(data.customer_id) });
     },
   });
 }
@@ -133,7 +134,7 @@ export function useDeleteGuarantor() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['guarantors'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.guarantors.lists() });
     },
   });
 }

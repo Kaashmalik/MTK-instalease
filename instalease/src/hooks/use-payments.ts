@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
+import { queryKeys } from '@/lib/query-keys';
 
 /**
  * Payment type from database
@@ -64,7 +65,7 @@ export function usePayments(options?: {
   const { profile } = useAuthStore();
 
   return useQuery({
-    queryKey: ['payments', profile?.shop_id, options?.contractId, options?.limit],
+    queryKey: queryKeys.payments.list(profile?.shop_id!, options || {}),
     queryFn: async () => {
       if (!profile?.shop_id) {
         throw new Error('No shop ID available');
@@ -120,7 +121,7 @@ export function useCustomerPayments(customerId: string | null) {
   const { profile } = useAuthStore();
 
   return useQuery({
-    queryKey: ['customer-payments', customerId, profile?.shop_id],
+    queryKey: queryKeys.payments.customerList(customerId!, profile?.shop_id!),
     queryFn: async () => {
       if (!customerId || !profile?.shop_id) {
         return [];
@@ -177,7 +178,7 @@ export function useCustomerPayments(customerId: string | null) {
  */
 export function usePayment(paymentId: string | null) {
   return useQuery({
-    queryKey: ['payment', paymentId],
+    queryKey: queryKeys.payments.detail(paymentId!),
     queryFn: async () => {
       if (!paymentId) return null;
 
@@ -217,7 +218,6 @@ export function usePayment(paymentId: string | null) {
  */
 export function useCreatePayment() {
   const queryClient = useQueryClient();
-  const { profile } = useAuthStore();
 
   return useMutation({
     mutationFn: async (paymentData: {
@@ -229,6 +229,7 @@ export function useCreatePayment() {
       transaction_id?: string;
       receipt_url?: string;
     }) => {
+      const { profile } = useAuthStore.getState();
       if (!profile?.shop_id) {
         throw new Error('No shop ID available');
       }
@@ -246,11 +247,10 @@ export function useCreatePayment() {
       if (error) throw error;
       return data as Payment;
     },
-    onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['installments'] });
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.installments.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.detail(data.contract_id) });
     },
   });
 }

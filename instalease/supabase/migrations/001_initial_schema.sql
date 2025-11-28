@@ -391,6 +391,65 @@ CREATE POLICY "Shop isolation for late fees" ON late_fees
   );
 
 -- ============================================================================
+-- USER PROFILE CREATION FUNCTION
+-- ============================================================================
+-- This function safely creates user profiles by bypassing RLS to avoid recursion
+-- Use this function instead of direct INSERT to prevent RLS policy conflicts
+CREATE OR REPLACE FUNCTION create_user_profile(
+  p_user_id UUID,
+  p_username VARCHAR(255),
+  p_role VARCHAR(50) DEFAULT 'customer'
+)
+RETURNS TABLE(user_id UUID, username VARCHAR, role VARCHAR, shop_id UUID)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_result_user_id UUID;
+  v_result_username VARCHAR(255);
+  v_result_role VARCHAR(50);
+  v_result_shop_id UUID;
+BEGIN
+  -- Use a CTE to avoid column ambiguity
+  WITH inserted_row AS (
+    INSERT INTO public.users (user_id, username, role, shop_id)
+    VALUES (p_user_id, p_username, p_role, NULL)
+    ON CONFLICT (user_id) DO UPDATE SET
+      username = EXCLUDED.username,
+      role = EXCLUDED.role
+    RETURNING 
+      public.users.user_id,
+      public.users.username,
+      public.users.role,
+      public.users.shop_id
+  )
+  SELECT 
+    inserted_row.user_id,
+    inserted_row.username,
+    inserted_row.role,
+    inserted_row.shop_id
+  INTO 
+    v_result_user_id,
+    v_result_username,
+    v_result_role,
+    v_result_shop_id
+  FROM inserted_row;
+  
+  RETURN QUERY SELECT 
+    v_result_user_id,
+    v_result_username,
+    v_result_role,
+    v_result_shop_id;
+END;
+$$;
+
+-- Grant execute permission to authenticated and anon users
+-- anon is needed because user might not have a session yet during signup
+GRANT EXECUTE ON FUNCTION create_user_profile(UUID, VARCHAR, VARCHAR) TO authenticated;
+GRANT EXECUTE ON FUNCTION create_user_profile(UUID, VARCHAR, VARCHAR) TO anon;
+
+-- ============================================================================
 -- FUNCTIONS AND TRIGGERS
 -- ============================================================================
 

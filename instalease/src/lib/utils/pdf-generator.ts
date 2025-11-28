@@ -1,60 +1,142 @@
 /**
  * PDF Generator Utilities
- * 
+ *
  * Functions for generating contract PDFs using pdf-lib.
- * 
+ *
  * @module lib/utils/pdf-generator
  */
 
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFPage, PDFFont, rgb, StandardFonts } from 'pdf-lib';
 import type { Contract } from '@/hooks/use-contracts';
 import type { Customer } from '@/hooks/use-customers';
 import type { Guarantor } from '@/hooks/use-guarantors';
 
-/**
- * Generate a contract PDF document
- * 
- * @param {Contract} contract - Contract data
- * @param {Customer} customer - Customer data
- * @param {Guarantor | null} guarantor - Guarantor data (optional)
- * @returns {Promise<Uint8Array>} PDF document as bytes
- */
+class PdfGenerator {
+  private pdfDoc: PDFDocument;
+  private page: PDFPage;
+  private font: PDFFont;
+  private boldFont: PDFFont;
+  private yPosition: number;
+  private readonly margin = 50;
+  private readonly pageWidth: number;
+  private readonly pageHeight: number;
+
+  private constructor(pdfDoc: PDFDocument, page: PDFPage, font: PDFFont, boldFont: PDFFont) {
+    this.pdfDoc = pdfDoc;
+    this.page = page;
+    this.font = font;
+    this.boldFont = boldFont;
+    const { width, height } = page.getSize();
+    this.pageWidth = width;
+    this.pageHeight = height;
+    this.yPosition = height - this.margin;
+  }
+
+  static async create(): Promise<PdfGenerator> {
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595, 842]); // A4 size
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    return new PdfGenerator(pdfDoc, page, font, boldFont);
+  }
+
+  drawTitle(title: string) {
+    this.page.drawText(title, {
+      x: this.margin,
+      y: this.yPosition,
+      size: 18,
+      font: this.boldFont,
+      color: rgb(0, 0, 0),
+    });
+    this.yPosition -= 40;
+  }
+
+  drawSectionTitle(title: string) {
+    this.page.drawText(title, {
+      x: this.margin,
+      y: this.yPosition,
+      size: 14,
+      font: this.boldFont,
+      color: rgb(0, 0, 0),
+    });
+    this.yPosition -= 25;
+  }
+
+  drawKeyValuePair(label: string, value: string) {
+    this.page.drawText(label, {
+      x: this.margin,
+      y: this.yPosition,
+      size: 10,
+      font: this.boldFont,
+    });
+    this.page.drawText(value, {
+      x: this.margin + 150,
+      y: this.yPosition,
+      size: 10,
+      font: this.font,
+    });
+    this.yPosition -= 20;
+  }
+  
+  drawTerms(terms: string[]) {
+    this.yPosition -= 30;
+    this.drawSectionTitle('Terms and Conditions:');
+    
+    terms.forEach((term) => {
+      if (this.yPosition < 100) {
+        this.page = this.pdfDoc.addPage([595, 842]);
+        this.yPosition = this.pageHeight - this.margin;
+      }
+      this.page.drawText(term, {
+        x: this.margin,
+        y: this.yPosition,
+        size: 9,
+        font: this.font,
+        color: rgb(0, 0, 0),
+      });
+      this.yPosition -= 18;
+    });
+  }
+
+  drawSignatureSection(hasGuarantor: boolean) {
+    this.yPosition -= 30;
+    this.drawSectionTitle('Signatures:');
+    this.yPosition -= 40;
+
+    this.page.drawText('Customer Signature:', { x: this.margin, y: this.yPosition, size: 10, font: this.font });
+    this.page.drawText('Date: _______________', { x: this.pageWidth - this.margin - 150, y: this.yPosition, size: 10, font: this.font });
+
+    if (hasGuarantor) {
+      this.yPosition -= 40;
+      this.page.drawText('Guarantor Signature:', { x: this.margin, y: this.yPosition, size: 10, font: this.font });
+    }
+  }
+  
+  drawFooter() {
+    this.page.drawText(`Generated on ${new Date().toLocaleDateString()} by InstalEase`, {
+      x: this.margin,
+      y: 30,
+      size: 8,
+      font: this.font,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+  }
+
+  async save(): Promise<Uint8Array> {
+    return this.pdfDoc.save();
+  }
+}
+
 export async function generateContractPDF(
   contract: Contract,
   customer: Customer,
   guarantor: Guarantor | null
 ): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4 size
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-  const { width, height } = page.getSize();
-  const margin = 50;
-  let yPosition = height - margin;
-
-  // Title
-  page.drawText('INSTALLMENT CONTRACT AGREEMENT', {
-    x: margin,
-    y: yPosition,
-    size: 18,
-    font: boldFont,
-    color: rgb(0, 0, 0),
-  });
-
-  yPosition -= 40;
-
-  // Contract Details
-  page.drawText('Contract Details:', {
-    x: margin,
-    y: yPosition,
-    size: 14,
-    font: boldFont,
-    color: rgb(0, 0, 0),
-  });
-
-  yPosition -= 25;
-
+  const pdf = await PdfGenerator.create();
+  
+  pdf.drawTitle('INSTALLMENT CONTRACT AGREEMENT');
+  
+  pdf.drawSectionTitle('Contract Details:');
   const contractDetails = [
     [`Contract ID:`, contract.contract_id],
     [`Product Name:`, contract.product_name],
@@ -66,38 +148,11 @@ export async function generateContractPDF(
     [`Total Amount:`, `PKR ${(contract.down_payment + contract.monthly_installment * contract.total_months).toLocaleString()}`],
     [`Contract Status:`, contract.contract_status.toUpperCase()],
   ];
+  contractDetails.forEach(([label, value]) => pdf.drawKeyValuePair(label, value));
 
-  contractDetails.forEach(([label, value]) => {
-    page.drawText(`${label}`, {
-      x: margin,
-      y: yPosition,
-      size: 10,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-    page.drawText(value, {
-      x: margin + 150,
-      y: yPosition,
-      size: 10,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= 20;
-  });
+  pdf.yPosition -= 20;
 
-  yPosition -= 20;
-
-  // Customer Details
-  page.drawText('Customer Details:', {
-    x: margin,
-    y: yPosition,
-    size: 14,
-    font: boldFont,
-    color: rgb(0, 0, 0),
-  });
-
-  yPosition -= 25;
-
+  pdf.drawSectionTitle('Customer Details:');
   const customerDetails = [
     [`Name:`, customer.full_name],
     [`CNIC:`, customer.cnic_number],
@@ -106,76 +161,19 @@ export async function generateContractPDF(
     [`Address:`, customer.address || 'N/A'],
     [`Monthly Income:`, customer.monthly_income ? `PKR ${customer.monthly_income.toLocaleString()}` : 'N/A'],
   ];
+  customerDetails.forEach(([label, value]) => pdf.drawKeyValuePair(label, value));
 
-  customerDetails.forEach(([label, value]) => {
-    page.drawText(`${label}`, {
-      x: margin,
-      y: yPosition,
-      size: 10,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-    page.drawText(value, {
-      x: margin + 150,
-      y: yPosition,
-      size: 10,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= 20;
-  });
-
-  // Guarantor Details (if exists)
   if (guarantor) {
-    yPosition -= 20;
-    page.drawText('Guarantor Details:', {
-      x: margin,
-      y: yPosition,
-      size: 14,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-
-    yPosition -= 25;
-
+    pdf.yPosition -= 20;
+    pdf.drawSectionTitle('Guarantor Details:');
     const guarantorDetails = [
       [`Name:`, guarantor.full_name],
       [`CNIC:`, guarantor.cnic_number],
       [`Phone:`, guarantor.phone],
       [`Relationship:`, guarantor.relationship_to_customer || 'N/A'],
     ];
-
-    guarantorDetails.forEach(([label, value]) => {
-      page.drawText(`${label}`, {
-        x: margin,
-        y: yPosition,
-        size: 10,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      });
-      page.drawText(value, {
-        x: margin + 150,
-        y: yPosition,
-        size: 10,
-        font: font,
-        color: rgb(0, 0, 0),
-      });
-      yPosition -= 20;
-    });
+    guarantorDetails.forEach(([label, value]) => pdf.drawKeyValuePair(label, value));
   }
-
-  yPosition -= 30;
-
-  // Terms and Conditions
-  page.drawText('Terms and Conditions:', {
-    x: margin,
-    y: yPosition,
-    size: 14,
-    font: boldFont,
-    color: rgb(0, 0, 0),
-  });
-
-  yPosition -= 25;
 
   const terms = [
     '1. The customer agrees to pay the monthly installments on or before the due date.',
@@ -184,75 +182,12 @@ export async function generateContractPDF(
     '4. Early settlement is allowed with applicable discounts.',
     '5. This contract is subject to the laws of Pakistan.',
   ];
+  pdf.drawTerms(terms);
+  
+  pdf.drawSignatureSection(!!guarantor);
+  
+  pdf.drawFooter();
 
-  terms.forEach((term) => {
-    if (yPosition < 100) {
-      // Add new page if needed
-      const newPage = pdfDoc.addPage([595, 842]);
-      yPosition = height - margin;
-    }
-    page.drawText(term, {
-      x: margin,
-      y: yPosition,
-      size: 9,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= 18;
-  });
-
-  yPosition -= 30;
-
-  // Signature Section
-  page.drawText('Signatures:', {
-    x: margin,
-    y: yPosition,
-    size: 14,
-    font: boldFont,
-    color: rgb(0, 0, 0),
-  });
-
-  yPosition -= 40;
-
-  page.drawText('Customer Signature:', {
-    x: margin,
-    y: yPosition,
-    size: 10,
-    font: font,
-    color: rgb(0, 0, 0),
-  });
-
-  page.drawText('Date: _______________', {
-    x: width - margin - 150,
-    y: yPosition,
-    size: 10,
-    font: font,
-    color: rgb(0, 0, 0),
-  });
-
-  if (guarantor) {
-    yPosition -= 40;
-    page.drawText('Guarantor Signature:', {
-      x: margin,
-      y: yPosition,
-      size: 10,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-  }
-
-  // Footer
-  page.drawText(
-    `Generated on ${new Date().toLocaleDateString()} by InstalEase`,
-    {
-      x: margin,
-      y: 30,
-      size: 8,
-      font: font,
-      color: rgb(0.5, 0.5, 0.5),
-    }
-  );
-
-  return await pdfDoc.save();
+  return pdf.save();
 }
 

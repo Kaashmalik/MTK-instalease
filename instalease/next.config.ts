@@ -4,10 +4,8 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig: NextConfig = {
   /* config options here */
   
-  // Enable Sentry instrumentation
-  experimental: {
-    instrumentationHook: true,
-  },
+  // Note: instrumentationHook is no longer needed in Next.js 16+
+  // The instrumentation.ts file is automatically detected
   
   // Production optimizations
   compress: true,

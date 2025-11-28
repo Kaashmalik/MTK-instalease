@@ -1,12 +1,16 @@
 {
   "name": "instalease",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -14,7 +18,9 @@
     "test:e2e:ui": "playwright test --ui",
     "load-test": "artillery run load-tests/load-test.yml",
     "load-test:quick": "artillery quick --count 10 --num 5",
-    "verify:production": "node scripts/verify-production.js"
+    "verify:production": "node scripts/verify-production.js",
+    "clean": "rimraf .next out",
+    "prebuild": "npm run type-check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -22,6 +28,8 @@
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@sentry/nextjs": "^10.26.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.84.0",
@@ -54,11 +62,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "artillery": "^2.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "artillery": "^2.0.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5"

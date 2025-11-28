@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,8 @@ export default function Signup() {
   const [username, setUsername] = useState('');
   const [usePhone, setUsePhone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -74,6 +77,11 @@ export default function Signup() {
       // Sign up with Supabase Auth
       let authResponse;
 
+      // Get the base URL for redirect
+      const redirectUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/auth/verify-email`
+        : '/auth/verify-email';
+
       if (usePhone) {
         authResponse = await supabase.auth.signUp({
           phone: identifier,
@@ -82,6 +90,7 @@ export default function Signup() {
             data: {
               username,
             },
+            emailRedirectTo: redirectUrl,
           },
         });
       } else {
@@ -92,6 +101,7 @@ export default function Signup() {
             data: {
               username,
             },
+            emailRedirectTo: redirectUrl,
           },
         });
       }
@@ -102,30 +112,56 @@ export default function Signup() {
 
       if (authResponse.data.user) {
         // Create user profile in users table
+        // Use RPC function to avoid RLS recursion issues
         // Note: This assumes shop_id will be set later by an admin
-        // For initial signup, you might want to create a default shop or handle differently
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            user_id: authResponse.data.user.id,
-            username: username.trim(),
-            role: 'customer', // Default role, can be changed by admin
-            shop_id: null, // Will be assigned by admin
-          });
+        const { data: profileData, error: profileError } = await supabase.rpc(
+          'create_user_profile',
+          {
+            p_user_id: authResponse.data.user.id,
+            p_username: username.trim(),
+            p_role: 'customer', // Default role, can be changed by admin
+          }
+        );
 
         if (profileError) {
-          console.error('Error creating user profile:', profileError);
+          // Log the full error object to see what's actually happening
+          console.error('Error creating user profile - Full Error Object:', profileError);
+          console.error('Error creating user profile - Stringified:', JSON.stringify(profileError, null, 2));
+          console.error('Error creating user profile - Details:', {
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+            code: profileError.code,
+          });
+          
+          // Check for specific error types
+          if (profileError.code === '23505') {
+            console.error('Duplicate username error - username already exists');
+          } else if (profileError.code === '42501') {
+            console.error('Permission denied - RLS policy blocking insert');
+          } else if (profileError.code === '42P17') {
+            console.error('Infinite recursion error - Run FIX_USER_SIGNUP_RECURSION.sql in Supabase');
+          } else if (profileError.message?.includes('permission denied') || profileError.message?.includes('policy')) {
+            console.error('RLS Policy Error - INSERT policy may be missing or incorrect');
+          }
+          
           // Don't throw - user is created in auth, profile can be fixed later
+          // This might happen if RLS policies prevent insertion or other constraints
+        } else if (profileData && profileData.length > 0) {
+          console.log('User profile created successfully:', profileData[0]);
+        } else {
+          console.log('User profile creation completed (no data returned)');
         }
 
         if (authResponse.data.session) {
           setUser(authResponse.data.user);
           setSession(authResponse.data.session);
           await refreshProfile();
-          router.push('/dashboard');
+          // Use window.location for hard redirect
+          window.location.href = '/dashboard';
         } else {
           // Email confirmation required
-          router.push('/auth/verify-email');
+          window.location.href = '/auth/verify-email';
         }
       }
     } catch (err: any) {
@@ -215,30 +251,62 @@ export default function Signup() {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                minLength={6}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  minLength={6}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  disabled={loading}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-                minLength={6}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  minLength={6}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  disabled={loading}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button

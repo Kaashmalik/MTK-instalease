@@ -12,14 +12,25 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 
 /**
+ * User roles in order of hierarchy
+ */
+export type UserRole = 'super_admin' | 'admin' | 'shop_owner' | 'credit_manager' | 'sales_rep' | 'customer';
+
+/**
  * User profile data from the users table
  */
 export interface UserProfile {
   user_id: string;
   shop_id: string | null;
   username: string;
-  role: 'admin' | 'shop_owner' | 'sales_rep' | 'credit_manager' | 'customer' | 'guarantor';
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  role: UserRole;
+  is_active: boolean;
   last_login: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -107,16 +118,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (session?.user) {
         set({ user: session.user, session });
 
-        // Fetch user profile
+        // Fetch user profile (allow missing profile without errors)
         const { data: profile, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          // PGRST116 = no rows returned, which is OK for new users
-          console.error('Error fetching user profile:', profileError);
+        if (profileError && (profileError.message || profileError.code)) {
+          console.error('Error fetching user profile:', {
+            message: profileError.message || 'Unknown error',
+            code: profileError.code || 'NO_CODE',
+            details: profileError.details || 'No details',
+            hint: profileError.hint || 'No hint',
+          });
         }
 
         set({ profile: profile || null });
@@ -150,10 +165,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .from('users')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error refreshing profile:', error);
+      if (error && (error.message || error.code)) {
+        console.error('Error refreshing profile:', {
+          message: error.message || 'Unknown error',
+          code: error.code || 'NO_CODE',
+          details: error.details || 'No details',
+          hint: error.hint || 'No hint',
+        });
         return;
       }
 

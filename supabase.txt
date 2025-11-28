@@ -1,0 +1,20 @@
+https://rklkwtxexdlqfnalvswc.supabase.co
+
+
+secret api key 
+
+sb_secret_A9ZPyj6ehf3X1J5UZYM__A_fW_6h0dd
+
+anon key 
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrbGt3dHhleGRscWZuYWx2c3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NTc3NjgsImV4cCI6MjA3OTMzMzc2OH0.ZSNR0A83TPCxlbsng-8N9lW27baMci5hVYbmJdhsAzE
+
+
+ secret key 
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrbGt3dHhleGRscWZuYWx2c3djIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mzc1Nzc2OCwiZXhwIjoyMDc5MzMzNzY4fQ.ePvD-iVpszrbUIxy8-sKqzLdTsSMxpNVX0qj934aBWk
+
+admin 
+instalease eamail
+
+instaleaseKaash297$
