@@ -152,7 +152,7 @@ export default function PrivacyPage() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            © 2025 MTK Codex. All rights reserved.
+            © 2026 MTK Codex. All rights reserved.
           </p>
         </div>
       </main>

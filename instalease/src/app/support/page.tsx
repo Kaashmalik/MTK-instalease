@@ -158,7 +158,7 @@ export default function SupportPage() {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl font-bold mb-1">MTK Codex</h3>
+                <h3 className="text-xl font-bold mb-1">&copy; 2026 MTK Codex</h3>
                 <p className="text-purple-200">Developed by Malik Kashif</p>
               </div>
               <div className="flex gap-4">

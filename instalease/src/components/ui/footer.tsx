@@ -9,7 +9,7 @@ interface FooterProps {
 
 /**
  * Reusable Footer Component
- * © 2025 MTK Codex. All rights reserved.
+ * © 2026 MTK Codex. All rights reserved.
  * 
  * Variants:
  * - minimal: Simple one-line copyright
@@ -25,7 +25,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
     return (
       <footer className={`py-4 text-center ${className}`}>
         <p className="text-xs text-gray-500">
-          © 2025{' '}
+          © 2026{' '}
           <Link 
             href="https://mtkcodex.site" 
             target="_blank" 
@@ -57,7 +57,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
             </Link>
           </p>
           <p className="text-xs text-gray-400">
-            © 2025 MTK Codex. All rights reserved.
+            © 2026 MTK Codex. All rights reserved.
           </p>
         </div>
       </footer>
@@ -108,7 +108,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
 
             {/* Copyright */}
             <p className="text-xs text-gray-500">
-              © 2025{' '}
+              © 2026{' '}
               <Link 
                 href="https://mtkcodex.site" 
                 target="_blank" 
@@ -138,7 +138,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
               <span>InstalEase v2.0</span>
             </div>
             <p className="text-xs text-gray-500">
-              © 2025{' '}
+              © 2026{' '}
               <Link 
                 href="https://mtkcodex.site" 
                 target="_blank" 
@@ -290,7 +290,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
               </Link>
             </div>
             <p className="text-sm text-gray-400">
-              © 2025{' '}
+              © 2026{' '}
               <Link 
                 href="https://mtkcodex.site" 
                 target="_blank" 
@@ -312,7 +312,7 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
 export function Copyright({ className = '' }: { className?: string }) {
   return (
     <p className={`text-xs text-gray-500 ${className}`}>
-      © 2025{' '}
+      © 2026{' '}
       <Link 
         href="https://mtkcodex.site" 
         target="_blank" 

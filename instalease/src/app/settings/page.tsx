@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Footer } from '@/components/ui/footer';
+import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 import Link from 'next/link';
 
 interface UserSettings {
@@ -413,27 +414,13 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Theme */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Theme
                   </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {['light', 'dark', 'system'].map((theme) => (
-                      <div
-                        key={theme}
-                        onClick={() => updateSetting('theme', theme as 'light' | 'dark' | 'system')}
-                        className={`p-4 rounded-lg border-2 cursor-pointer text-center transition-all ${
-                          settings?.theme === theme
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="text-3xl mb-2">
-                          {theme === 'light' ? '☀️' : theme === 'dark' ? '🌙' : '💻'}
-                        </div>
-                        <span className="font-medium capitalize">{theme}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Choose your preferred color scheme. This setting applies across all pages.
+                  </p>
+                  <ThemeSwitcher variant="buttons" className="w-full sm:w-auto" />
                 </div>
 
                 {/* Primary Color */}

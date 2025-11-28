@@ -21,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LoadingState, ErrorBoundary } from '@/components/ErrorBoundary';
 import { Footer } from '@/components/ui/footer';
+import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 import { supabase } from '@/lib/supabase/client';
 import { useState } from 'react';
 import { useRealtimeAll } from '@/hooks/use-realtime';
@@ -263,6 +264,7 @@ export default function DashboardPage() {
                     {profile?.username || user.email}
                   </span>
                 </div>
+                <ThemeSwitcher variant="icon" />
                 <Button variant="outline" size="sm" onClick={() => signOut()} className="text-xs sm:text-sm">
                   <span className="hidden sm:inline">Sign Out</span>
                   <span className="sm:hidden">🚪</span>

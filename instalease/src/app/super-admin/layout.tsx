@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/ui/footer';
+import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 
 export default function SuperAdminLayout({
   children,
@@ -91,6 +92,7 @@ export default function SuperAdminLayout({
                   {profile?.username || user.email}
                 </span>
               </div>
+              <ThemeSwitcher variant="icon" className="text-white" />
               <Button 
                 variant="outline" 
                 size="sm"
