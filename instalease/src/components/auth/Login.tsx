@@ -130,9 +130,10 @@ export default function Login() {
         // User exists but email not confirmed
         setError('Email not confirmed. Please check your inbox and verify your email address.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in. Please check your credentials.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -167,9 +168,10 @@ export default function Login() {
       }
 
       setMessage('Verification email sent! Please check your inbox and click the link to verify your account.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Resend error:', err);
-      setError(err.message || 'Failed to resend verification email. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend verification email. Please try again.';
+      setError(errorMessage);
     } finally {
       setResending(false);
     }
@@ -304,7 +306,7 @@ export default function Login() {
             </div>
 
             <div className="text-center text-sm">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <a href="/auth/signup" className="text-primary hover:underline">
                 Sign up
               </a>

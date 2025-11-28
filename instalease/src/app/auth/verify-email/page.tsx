@@ -123,9 +123,10 @@ export default function VerifyEmailPage() {
       }
 
       setMessage('Verification email sent! Please check your inbox.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Resend error:', err);
-      setError(err.message || 'Failed to resend verification email.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend verification email.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -168,7 +169,7 @@ export default function VerifyEmailPage() {
 
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  We've sent a verification email to your inbox. Please click the link in the email to verify your account.
+                  We&apos;ve sent a verification email to your inbox. Please click the link in the email to verify your account.
                 </p>
 
                 <div className="space-y-2">
@@ -191,7 +192,7 @@ export default function VerifyEmailPage() {
                 </div>
 
                 <div className="text-center text-xs text-gray-500">
-                  <p>Didn't receive the email?</p>
+                  <p>Didn&apos;t receive the email?</p>
                   <ul className="mt-2 list-inside list-disc space-y-1">
                     <li>Check your spam/junk folder</li>
                     <li>Make sure you entered the correct email address</li>

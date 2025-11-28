@@ -87,25 +87,19 @@ export function Footer({ variant = 'default', className = '' }: FooterProps) {
             {/* Links */}
             <div className="flex items-center gap-4">
               <Link 
-                href="https://mtkcodex.site" 
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="/support"
                 className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
               >
                 Support
               </Link>
               <Link 
-                href="https://mtkcodex.site" 
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="/privacy"
                 className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
               >
                 Privacy
               </Link>
               <Link 
-                href="https://mtkcodex.site" 
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="/terms"
                 className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
               >
                 Terms

@@ -165,9 +165,10 @@ export default function Signup() {
           window.location.href = '/auth/verify-email';
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Signup error:', err);
-      setError(err.message || 'Failed to create account. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create account. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
