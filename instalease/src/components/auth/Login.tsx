@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Footer } from '@/components/ui/footer';
 
 /**
  * Login form component
@@ -311,6 +312,8 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
+      
+      <Footer variant="auth" />
     </div>
   );
 }

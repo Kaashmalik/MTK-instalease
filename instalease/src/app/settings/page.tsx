@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Footer } from '@/components/ui/footer';
 import Link from 'next/link';
 
 interface UserSettings {
@@ -605,6 +606,8 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Footer variant="dashboard" />
     </div>
   );
 }

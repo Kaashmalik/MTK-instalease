@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Footer } from '@/components/ui/footer';
 
 export default function SuperAdminLayout({
   children,
@@ -152,9 +153,12 @@ export default function SuperAdminLayout({
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 min-h-[calc(100vh-180px)]">
         {children}
       </main>
+
+      {/* Footer */}
+      <Footer variant="admin" />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { usePayments } from '@/hooks/use-payments';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingState, ErrorBoundary } from '@/components/ErrorBoundary';
+import { Footer } from '@/components/ui/footer';
 import { supabase } from '@/lib/supabase/client';
 import { useState } from 'react';
 import { useRealtimeAll } from '@/hooks/use-realtime';
@@ -581,6 +582,8 @@ export default function DashboardPage() {
             </div>
           )}
         </main>
+        
+        <Footer variant="dashboard" />
       </div>
     </ErrorBoundary>
   );

@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Footer } from '@/components/ui/footer';
 
 /**
  * Email verification page component
@@ -202,7 +203,8 @@ export default function VerifyEmailPage() {
           )}
         </CardContent>
       </Card>
+      
+      <Footer variant="auth" />
     </div>
   );
 }
-

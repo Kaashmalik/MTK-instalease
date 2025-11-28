@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Footer } from '@/components/ui/footer';
 import Link from 'next/link';
 
 interface ExistingApplication {
@@ -803,6 +804,8 @@ export default function ApplyShopPage() {
           </div>
         )}
       </div>
+      
+      <Footer variant="dashboard" />
     </div>
   );
 }
